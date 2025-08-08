@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat con Ciro Bolaños - PedidosYa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            margin-left: 50px; /* Espacio para la franja izquierda */
+            margin-right: 50px; /* Espacio para la franja derecha */
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 50px;
+            height: 100vh;
+            background-color: #ff3e3e;
+            z-index: 1000;
+        }
+        .sidebar-right {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 100vh;
+            background-color: #ff3e3e;
+            z-index: 1000;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto; /* Reducido el margen superior para acercar al título */
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,00,0.1);
+        }
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .user-msg {
+            text-align: right;
+            color: blue;
+        }
+        .bot-msg {
+            text-align: left;
+            color: green;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #ff3e3e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e23636;
+        }
+        .header-container {
+            text-align: center; /* Centrar el título */
+        }
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ff3e3e;
+            object-fit: cover;
+            display: block;
+            margin: 20px auto; /* Centrar la imagen horizontalmente */
+        }
+        #toggleAudio {
+            margin-top: 10px;
+            background-color: #4caf50;
+        }
+        #toggleAudio:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar"></div>
+    <div class="sidebar-right"></div>
+    <img src="ciro.jpg" alt="Ciro Bolaños" class="profile-pic">
+    <div class="chat-container">
+        <div class="header-container">
+            <h2>Atención al Cliente - Ciro Bolaños</h2>
+        </div>
+        <div class="chat-box" id="chatBox"></div>
+        <input type="text" id="mensajeInput" placeholder="Escribe tu mensaje aquí..." />
+        <button onclick="enviarMensaje()">Enviar</button>
+        <button id="toggleAudio" onclick="toggleAudio()">Reproducir Audio</button>
+    </div>
+
+    <audio id="backgroundAudio" loop>
+        <source src="sapito.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <script>
+        async function enviarMensaje() {
+            const input = document.getElementById("mensajeInput");
+            const chatBox = document.getElementById("chatBox");
+            const mensaje = input.value.trim();
+
+            if (mensaje === "") return;
+
+            // Mostrar el mensaje del usuario
+            const userMsg = document.createElement("div");
+            userMsg.className = "user-msg";
+            userMsg.textContent = "Tú: " + mensaje;
+            chatBox.appendChild(userMsg);
+
+            // Limpiar input
+            input.value = "";
+
+            try {
+                const response = await fetch("http://35.225.198.236:5000/generar_cliente", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ mensaje: mensaje })
+                });
+
+                const data = await response.json();
+
+                const botMsg = document.createElement("div");
+                botMsg.className = "bot-msg";
+                botMsg.textContent = "Ciro: " + (data.respuesta || data.error || "Error desconocido");
+                chatBox.appendChild(botMsg);
+
+                chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
+            } catch (error) {
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "bot-msg";
+                errorMsg.textContent = "Ciro: Ocurrió un error al conectar con el servidor.";
+                chatBox.appendChild(errorMsg);
+            }
+        }
+
+        // Control del audio
+        let isPlaying = false;
+        const audio = document.getElementById("backgroundAudio");
+        const toggleButton = document.getElementById("toggleAudio");
+
+        // Ajustar el volumen del audio
+        document.addEventListener("DOMContentLoaded", function() {
+            audio.volume = 0.2; // Volumen bajo para no molestar
+        });
+
+        // Función para alternar reproducción/pausa
+        function toggleAudio() {
+            if (isPlaying) {
+                audio.pause();
+                toggleButton.textContent = "Reproducir Audio";
+            } else {
+                audio.play().catch(function(error) {
+                    console.error("Error al reproducir el audio:", error);
+                });
+                toggleButton.textContent = "Pausar Audio";
+            }
+            isPlaying = !isPlaying;
+        }
+    </script>
+</body>
+</html>
