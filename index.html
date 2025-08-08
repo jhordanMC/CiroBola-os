@@ -127,12 +127,12 @@
             input.value = "";
 
             try {
-                const response = await fetch("http://35.225.198.236:5000/generar_cliente", {
+                const response = await fetch("https://web-production-aa7c.up.railway.app/api", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ mensaje: mensaje })
+                    body: JSON.stringify({ prompt: mensaje })
                 });
 
                 const data = await response.json();
@@ -176,4 +176,5 @@
         }
     </script>
 </body>
+
 </html>
